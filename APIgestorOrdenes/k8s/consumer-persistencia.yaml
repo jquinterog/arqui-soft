@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-persistencia
+  namespace: gestor-ordenes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer-persistencia
+  template:
+    metadata:
+      labels:
+        app: consumer-persistencia
+    spec:
+      containers:
+        - name: consumer
+          image: gestor-ordenes-consumer-db:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: gestor-ordenes-config
