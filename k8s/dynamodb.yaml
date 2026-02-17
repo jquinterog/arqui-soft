@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamodb
+  namespace: arquisoft
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dynamodb
+  template:
+    metadata:
+      labels:
+        app: dynamodb
+    spec:
+      containers:
+      - name: dynamodb
+        image: amazon/dynamodb-local:2.5.3
+        imagePullPolicy: IfNotPresent
+        args:
+        - "-jar"
+        - "DynamoDBLocal.jar"
+        - "-sharedDb"
+        - "-dbPath"
+        - "/home/dynamodblocal/data"
+        ports:
+        - containerPort: 8000
+          name: http
+        volumeMounts:
+        - name: dynamodb-data
+          mountPath: /home/dynamodblocal/data
+      volumes:
+      - name: dynamodb-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dynamodb
+  namespace: arquisoft
+spec:
+  selector:
+    app: dynamodb
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  type: ClusterIP
