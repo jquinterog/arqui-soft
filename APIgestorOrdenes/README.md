@@ -82,16 +82,10 @@ gestorOrdenes/
 
 ## Despliegue en Kubernetes
 
-- Se despliega **Kafka**, la **API** y los dos **consumers** (persistencia en DynamoDB + matcher stub).
-- **DynamoDB** no se despliega en el cluster: el consumer de persistencia usa la API de AWS (necesita credenciales o IAM Role for Service Account).
+- Se despliega **Kafka**, **LocalStack (DynamoDB)**, la **API** y los dos **consumers** (persistencia + matcher stub).
+- El consumer de persistencia apunta a `http://localstack-service:4566` y crea la tabla `ordenes` al arrancar si no existe.
 
-1. Crear la tabla en DynamoDB (una vez, en AWS):
-
-   - Nombre: `ordenes` (o el que uses en `DYNAMO_TABLE_ORDENES`)
-   - Partition key: `id` (String)
-   - O dejar que el consumer la cree al arrancar (si tiene permisos `dynamodb:CreateTable`).
-
-2. Construir imágenes:
+1. Construir imágenes:
 
    ```bash
    docker build -f Dockerfile.api -t gestor-ordenes-api:latest .
@@ -99,7 +93,7 @@ gestorOrdenes/
    docker build -f Dockerfile.consumer-matcher -t gestor-ordenes-consumer-matcher:latest .
    ```
 
-3. Cargar en el cluster (ej. minikube):
+2. Cargar en el cluster (ej. minikube):
 
    ```bash
    minikube image load gestor-ordenes-api:latest
@@ -107,9 +101,7 @@ gestorOrdenes/
    minikube image load gestor-ordenes-consumer-matcher:latest
    ```
 
-4. Credenciales AWS para el consumer de persistencia: Secret con `AWS_ACCESS_KEY_ID` y `AWS_SECRET_ACCESS_KEY`, o usar IRSA (IAM Role for Service Account) en EKS.
-
-5. Aplicar manifiestos:
+3. Aplicar manifiestos:
 
    ```bash
    kubectl apply -k k8s/

@@ -14,7 +14,7 @@ load_dotenv()
 from confluent_kafka import Consumer, KafkaError
 
 from shared.config import get_settings
-from consumers.db.dynamo import get_client, ensure_table, put_orden
+from shared.dynamo import get_client, ensure_table, put_orden
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

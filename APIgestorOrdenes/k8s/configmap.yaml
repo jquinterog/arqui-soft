@@ -8,3 +8,4 @@ data:
   KAFKA_TOPIC_ORDENES: "ordenes"
   DYNAMO_TABLE_ORDENES: "ordenes"
   AWS_REGION: "us-east-1"
+  AWS_ENDPOINT_URL: "http://localstack-service:4566"

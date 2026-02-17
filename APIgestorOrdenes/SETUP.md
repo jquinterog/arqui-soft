@@ -153,6 +153,36 @@ docker compose up -d
 
 ---
 
+## Opción C: Kubernetes con `kubectl apply -k k8s/`
+
+Los manifiestos de `k8s/` ya incluyen **Kafka + LocalStack (DynamoDB) + API + consumers**.
+
+1. Construye imágenes:
+
+```bash
+docker build -f Dockerfile.api -t gestor-ordenes-api:latest .
+docker build -f Dockerfile.consumer-db -t gestor-ordenes-consumer-db:latest .
+docker build -f Dockerfile.consumer-matcher -t gestor-ordenes-consumer-matcher:latest .
+```
+
+2. Si usas minikube, cárgalas al cluster:
+
+```bash
+minikube image load gestor-ordenes-api:latest
+minikube image load gestor-ordenes-consumer-db:latest
+minikube image load gestor-ordenes-consumer-matcher:latest
+```
+
+3. Aplica manifiestos:
+
+```bash
+kubectl apply -k k8s/
+```
+
+No hace falta crear DynamoDB aparte: el consumer de persistencia crea la tabla `ordenes` en LocalStack si no existe.
+
+---
+
 ## Parar todo
 
 - API y consumers: `Ctrl+C` en cada terminal.

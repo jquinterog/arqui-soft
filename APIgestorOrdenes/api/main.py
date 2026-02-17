@@ -15,7 +15,7 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 from shared.models import OrdenCreate, OrdenEvento
 from shared.config import get_settings
 from api.kafka_producer import get_producer, orden_to_evento, publish_orden
-from consumers.db.dynamo import get_client, ensure_table, list_ordenes
+from shared.dynamo import get_client, ensure_table, list_ordenes
 
 settings = get_settings()
 producer: Producer | None = None
