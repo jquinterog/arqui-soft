@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-manager-python
+  namespace: arquisoft
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orders-manager-python
+  template:
+    metadata:
+      labels:
+        app: orders-manager-python
+    spec:
+      containers:
+      - name: orders-manager-python
+        image: orders-manager-python:dev
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-manager-python
+  namespace: arquisoft
+spec:
+  selector:
+    app: orders-manager-python
+  ports:
+  - name: http
+    port: 5000
+    targetPort: 5000
+    protocol: TCP
+  type: ClusterIP
