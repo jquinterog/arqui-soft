@@ -21,7 +21,7 @@ from api.kafka_producer import (
     orden_to_accepted_event,
     publish_orden_accepted,
 )
-from consumers.db.dynamo import (
+from shared.dynamo import (
     get_client,
     ensure_table,
     ensure_orders_table,

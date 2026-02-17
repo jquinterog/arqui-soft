@@ -7,6 +7,6 @@ resources:
   - namespace.yaml
   - configmap.yaml
   - kafka.yaml
+  - localstack.yaml
   - api.yaml
   - consumer-persistencia.yaml
-  - consumer-matcher.yaml

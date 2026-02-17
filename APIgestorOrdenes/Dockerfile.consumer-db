@@ -10,4 +10,4 @@ COPY consumers/ ./consumers/
 
 ENV PYTHONPATH=/app
 
-CMD ["python", "-m", "consumers.db.consumer_persistencia"]
+CMD ["python", "-m", "consumers.db.engine_worker"]

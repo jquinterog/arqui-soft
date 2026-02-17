@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: consumer-persistencia
+  name: consumer-matcher
   namespace: gestor-ordenes
 spec:
   replicas: 1

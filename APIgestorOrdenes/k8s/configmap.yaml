@@ -6,5 +6,10 @@ metadata:
 data:
   KAFKA_BOOTSTRAP_SERVERS: "kafka-service:9092"
   KAFKA_TOPIC_ORDENES: "ordenes"
+  KAFKA_TOPIC_ORDERS_ACCEPTED: "orders.accepted"
   DYNAMO_TABLE_ORDENES: "ordenes"
+  DYNAMO_TABLE_ORDERS: "orders"
+  DYNAMO_TABLE_ORDER_BOOK: "order_book"
+  DYNAMO_TABLE_TRADES_BY_ORDER: "trades_by_order"
   AWS_REGION: "us-east-1"
+  AWS_ENDPOINT_URL: "http://localstack-service:4566"
