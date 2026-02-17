@@ -69,7 +69,11 @@ El `.env.example` ya trae lo necesario para Localstack. Si falta, asegúrate de 
 ```env
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 KAFKA_TOPIC_ORDENES=ordenes
+KAFKA_TOPIC_ORDERS_ACCEPTED=orders.accepted
 DYNAMO_TABLE_ORDENES=ordenes
+DYNAMO_TABLE_ORDERS=orders
+DYNAMO_TABLE_ORDER_BOOK=order_book
+DYNAMO_TABLE_TRADES_BY_ORDER=trades_by_order
 AWS_REGION=us-east-1
 AWS_ENDPOINT_URL=http://localhost:4566
 AWS_ACCESS_KEY_ID=test
@@ -87,20 +91,22 @@ uvicorn api.main:app --reload --port 8000
 
 Deberías ver algo como: `Uvicorn running on http://127.0.0.1:8000`.
 
-### 6. Levantar los dos consumers (otras dos terminales)
+### 6. Levantar el engine worker (y opcionalmente el matcher stub)
 
-En cada una: activar el venv, ir a la raíz del proyecto y poner `PYTHONPATH`:
+En cada terminal: activar el venv, ir a la raíz del proyecto y poner `PYTHONPATH`.
 
-**Terminal 2 – Consumer persistencia (DynamoDB):**
+**Terminal 2 – Engine worker (orders.accepted → orders / order_book / matching / trades):**
 
 ```powershell
 cd "c:\Users\willi\Documents\Universidad\Arqutiectura de Software\Desarrollo\gestorOrdenes"
 .\venv\Scripts\Activate.ps1
 $env:PYTHONPATH = (Get-Location).Path
-python -m consumers.db.consumer_persistencia
+python -m consumers.db.engine_worker
 ```
 
-**Terminal 3 – Consumer matcher (stub):**
+POC: ejecutar una sola réplica. Para escalar, ver comentarios en `engine_worker.py` (lock por symbol).
+
+**Terminal 3 – Consumer matcher (stub, opcional):**
 
 ```powershell
 cd "c:\Users\willi\Documents\Universidad\Arqutiectura de Software\Desarrollo\gestorOrdenes"
@@ -120,7 +126,7 @@ Crear una orden (en otra terminal o desde el navegador/docs):
 curl -X POST http://localhost:8000/ordenes -H "Content-Type: application/json" -d "{\"tipo\": \"compra\", \"activo\": \"AAPL\", \"cantidad\": 10, \"precio\": 150.5, \"cliente_id\": \"cli-001\"}"
 ```
 
-En las terminales de los consumers deberías ver los logs de la orden recibida y guardada en DynamoDB (Localstack).
+En la terminal del engine_worker deberías ver el log de la orden procesada (orders + order_book + matching). También puedes usar GET /orders y GET /orders/{order_id}/trades.
 
 ---
 
@@ -131,7 +137,7 @@ Si quieres usar DynamoDB en la nube:
 1. Instala **AWS CLI** y configura credenciales: `aws configure`.
 2. No levantes Localstack: en `docker-compose` comenta o quita el servicio `localstack`, o usa un `docker-compose` que solo tenga Kafka.
 3. En `.env` **no** pongas `AWS_ENDPOINT_URL` (o déjalo vacío). Pon tu `AWS_REGION` y deja que use tu perfil/credenciales de AWS.
-4. Sigue los mismos pasos 1, 2, 5, 6 y 7 de la Opción A; el consumer de persistencia creará la tabla en DynamoDB si tiene permisos.
+4. Sigue los mismos pasos 1, 2, 5, 6 y 7 de la Opción A; el engine_worker creará las tablas (orders, order_book, trades_by_order) si tiene permisos.
 
 ---
 
@@ -147,8 +153,8 @@ copy .env.example .env
 docker compose up -d
 # Esperar ~30 s, luego en 3 terminales (con venv activado y PYTHONPATH):
 # Terminal 1: uvicorn api.main:app --reload --port 8000
-# Terminal 2: python -m consumers.db.consumer_persistencia
-# Terminal 3: python -m consumers.matcher.consumer_matcher
+# Terminal 2: python -m consumers.db.engine_worker
+# Terminal 3 (opcional): python -m consumers.matcher.consumer_matcher
 ```
 
 ---

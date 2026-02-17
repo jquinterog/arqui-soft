@@ -5,9 +5,8 @@ API en Python que recibe órdenes de compra y venta, las publica en **Kafka** (t
 ## Arquitectura
 
 ```
-  Cliente → API (FastAPI) → Kafka (topic: ordenes)
-                                  ├→ Consumer Persistencia → DynamoDB
-                                  └→ Consumer Matcher (stub, solo suscrito)
+  Cliente → API (FastAPI) → Kafka (topic: orders.accepted, key=symbol)
+                                  └→ Engine worker → DynamoDB (orders, order_book, trades_by_order) + matching
 ```
 
 ## Estructura
@@ -19,7 +18,7 @@ gestorOrdenes/
 │   └── kafka_producer.py
 ├── consumers/
 │   ├── db/                  # Persistencia en DynamoDB
-│   │   ├── consumer_persistencia.py
+│   │   ├── engine_worker.py
 │   │   └── dynamo.py
 │   └── matcher/             # Stub (solo suscripción)
 │       └── consumer_matcher.py
@@ -76,14 +75,14 @@ gestorOrdenes/
 5. En otras terminales, consumers:
 
    ```bash
-   python -m consumers.db.consumer_persistencia
+   python -m consumers.db.engine_worker
    python -m consumers.matcher.consumer_matcher
    ```
 
 ## Despliegue en Kubernetes
 
-- Se despliega **Kafka**, la **API** y los dos **consumers** (persistencia en DynamoDB + matcher stub).
-- **DynamoDB** no se despliega en el cluster: el consumer de persistencia usa la API de AWS (necesita credenciales o IAM Role for Service Account).
+- Se despliega **Kafka**, la **API** y los **consumers** (engine_worker + matcher stub).
+- **DynamoDB** no se despliega en el cluster: el engine_worker usa la API de AWS (necesita credenciales o IAM Role for Service Account).
 
 1. Crear la tabla en DynamoDB (una vez, en AWS):
 
@@ -107,7 +106,7 @@ gestorOrdenes/
    minikube image load gestor-ordenes-consumer-matcher:latest
    ```
 
-4. Credenciales AWS para el consumer de persistencia: Secret con `AWS_ACCESS_KEY_ID` y `AWS_SECRET_ACCESS_KEY`, o usar IRSA (IAM Role for Service Account) en EKS.
+4. Credenciales AWS para el engine_worker: Secret con `AWS_ACCESS_KEY_ID` y `AWS_SECRET_ACCESS_KEY`, o usar IRSA (IAM Role for Service Account) en EKS.
 
 5. Aplicar manifiestos:
 
@@ -125,4 +124,4 @@ gestorOrdenes/
   - `precio`: número > 0
   - `cliente_id`: identificador del cliente
 
-Respuesta: orden con `id` y `timestamp`. El suscriptor de persistencia la guarda en DynamoDB; el matcher (stub) solo recibe el evento y lo registra en log.
+Respuesta: orden con `id` y `timestamp`. El engine_worker consume `orders.accepted`, persiste en DynamoDB (orders, order_book, trades_by_order) y ejecuta matching. Ver también **GET /orders** (filtros: symbol, status, matched) y **GET /orders/{order_id}/trades**.

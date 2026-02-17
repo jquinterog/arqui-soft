@@ -36,6 +36,30 @@ class OrdenPersistida(OrdenEvento):
     estado: str = "pendiente"  # pendiente, ejecutada, cancelada
 
 
+class OrderSide(str, Enum):
+    """Lado de la orden para matching (Kafka y DynamoDB)."""
+    BUY = "BUY"
+    SELL = "SELL"
+
+
+class OrderStatus(str, Enum):
+    """Estado de la orden en el engine."""
+    OPEN = "OPEN"
+    PARTIAL = "PARTIAL"
+    FILLED = "FILLED"
+
+
+class OrderAcceptedEvent(BaseModel):
+    """Evento en topic orders.accepted (key=symbol)."""
+    order_id: str
+    symbol: str
+    side: OrderSide
+    price_cents: int = Field(..., gt=0)
+    qty: float = Field(..., gt=0)
+    cliente_id: str
+    ts_ms: int
+
+
 class MatchResult(BaseModel):
     """Resultado de un match entre orden de compra y venta."""
     orden_compra_id: str
